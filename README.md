@@ -1,2 +1,10 @@
 # PDFManga2-PC
-This application is used to download manga from some sites to PDF files
+Open-source application for downloading manga from "readmanga" group sites
+## Command line options
+THREADS_COUNT - optional parameter that sets amount of image downloading threads, 10 - default
+<br>
+For example: java -jar PDFManga2.jar 1 will create instance with one image downloading thread(Very slow, pages will be downloaded one by one).
+##Credits
+Written by: MasterLogick
+<br>
+Version 2.0.0
