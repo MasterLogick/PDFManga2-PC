@@ -41,7 +41,7 @@
                     <archive>
                         <manifest>
                             <mainClass>
-                                org.ddns.logick.Main
+                                net.ddns.logick.Main
                             </mainClass>
                         </manifest>
                     </archive>

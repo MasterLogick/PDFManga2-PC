@@ -1,4 +1,4 @@
-package org.ddns.logick;
+package net.ddns.logick;
 
 import org.apache.http.client.fluent.Request;
 import org.jsoup.Jsoup;
@@ -12,7 +12,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ListIterator;
 
 public class ReadMangaParser implements Parser {
     @Override
@@ -37,9 +40,8 @@ public class ReadMangaParser implements Parser {
         StringBuilder html = new StringBuilder();
         html.append("<html>");
         html.append("<h2>").append(mainPage.selectFirst("span.name").text()).append("</h2><br>");
-        Iterator<String> iterator = ps.eachText().iterator();
-        while (iterator.hasNext()) {
-            html.append(iterator.next()).append("<br>");
+        for (String s : ps.eachText()) {
+            html.append(s).append("<br>");
         }
         html.append("</html>");
         return new MangaData(cover, html.toString(), mangaMainPageURI.getPath().substring(mangaMainPageURI.getPath().lastIndexOf("/") + 1) + ".pdf", mainPage.selectFirst("table.table-hover").select("a").size());
@@ -76,10 +78,7 @@ public class ReadMangaParser implements Parser {
             secondaryProgressBar.setValue(from - iterator.nextIndex());
             secondaryProgressBar.setString((from - iterator.nextIndex()) + " of " + (from - to + 1) + " chapters parsed");
             if (!ParseManager.isWork) {
-                mainProgressBar.setValue(0);
-                mainProgressBar.setString("Canceled");
-                secondaryProgressBar.setValue(0);
-                secondaryProgressBar.setString("Canceled");
+                Main.cancelOnProgressBar(mainProgressBar, secondaryProgressBar);
                 return;
             }
             try {

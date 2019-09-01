@@ -1,4 +1,4 @@
-package org.ddns.logick;
+package net.ddns.logick;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -17,34 +17,38 @@ import java.net.URI;
 import java.net.URL;
 import java.security.AccessControlException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ListIterator;
 
 class ParseManager {
+    private static HashMap<String, Parser> parsers = new HashMap<>();
     private static ReadMangaParser readMangaParser = new ReadMangaParser();
     static boolean isWork = false;
 
+    static void addParser(Parser p, String... domains) {
+        for (String domain :
+                domains) {
+            parsers.put(domain, p);
+        }
+    }
+
     static MangaData parse(String mangaMainPageURL, JTextArea logTextArea) {
         URI uri = URI.create(mangaMainPageURL);
-        switch (uri.getHost()) {
-            case "readmanga.me":
-            case "mintmanga.com":
-                return readMangaParser.parse(uri, logTextArea);
-            default:
-                logTextArea.append("Unknown domain: " + uri.getHost() + "\n");
-                return null;
+        Parser parser = parsers.get(uri.getHost());
+        if (parser != null) return parser.parse(uri, logTextArea);
+        else {
+            logTextArea.append("Unknown domain: " + uri.getHost() + "\n");
+            return null;
         }
     }
 
     static void download(URI mangaMainPageURI, int from, int to, int divisionCounter, File output, JTextArea logTextArea, String prefix, JProgressBar mainProgressBar, JProgressBar secondaryProgressBar) {
-        isWork = true;
-        switch (mangaMainPageURI.getHost()) {
-            case "readmanga.me":
-            case "mintmanga.com":
-                readMangaParser.download(mangaMainPageURI, from, to, divisionCounter, output, logTextArea, prefix, mainProgressBar, secondaryProgressBar);
-                break;
-            default:
-                logTextArea.append("Unknown domain: " + mangaMainPageURI.getHost() + "\n");
-        }
+        Parser parser = parsers.get(mangaMainPageURI.getHost());
+        if (parser != null) {
+            isWork = true;
+            parser.download(mangaMainPageURI, from, to, divisionCounter, output, logTextArea, prefix, mainProgressBar, secondaryProgressBar);
+        } else
+            logTextArea.append("Unknown domain: " + mangaMainPageURI.getHost() + "\n");
     }
 
     static void cancel() {
@@ -53,10 +57,7 @@ class ParseManager {
 
     static void download(ArrayList<String> imgURIs, int divisionCounter, File output, JTextArea logTextArea, String prefix, JProgressBar mainProgressBar, JProgressBar secondaryProgressBar) {
         if (!ParseManager.isWork) {
-            mainProgressBar.setValue(0);
-            mainProgressBar.setString("Canceled");
-            secondaryProgressBar.setValue(0);
-            secondaryProgressBar.setString("Canceled");
+            Main.cancelOnProgressBar(mainProgressBar, secondaryProgressBar);
             return;
         }
         mainProgressBar.setValue(mainProgressBar.getValue() + 1);
@@ -88,10 +89,7 @@ class ParseManager {
                         }
                     }
                     if (!ParseManager.isWork) {
-                        mainProgressBar.setValue(0);
-                        mainProgressBar.setString("Canceled");
-                        secondaryProgressBar.setValue(0);
-                        secondaryProgressBar.setString("Canceled");
+                        Main.cancelOnProgressBar(mainProgressBar, secondaryProgressBar);
                         return;
                     }
                     try {
@@ -141,10 +139,7 @@ class ParseManager {
             secondaryProgressBar.setValue(i);
             secondaryProgressBar.setString("Page " + (i + 1) + " of " + imgURIs.size() + " added to document");
             if (!ParseManager.isWork) {
-                mainProgressBar.setValue(0);
-                mainProgressBar.setString("Canceled");
-                secondaryProgressBar.setValue(0);
-                secondaryProgressBar.setString("Canceled");
+                Main.cancelOnProgressBar(mainProgressBar, secondaryProgressBar);
                 return;
             }
         }
@@ -152,8 +147,6 @@ class ParseManager {
         mainProgressBar.setString(mainProgressBar.getValue() + "/" + mainProgressBar.getMaximum() + ": writing PDF to disk");
         if (divisionCounter == 1) {
             try {
-                output.createNewFile();
-                output.delete();
                 output.createNewFile();
                 docs[0].save(output);
                 docs[0].close();
@@ -173,8 +166,6 @@ class ParseManager {
                 File f = new File(output.getAbsolutePath() + File.separator + prefix + "-" + (i + 1) + "-part.pdf");
                 try {
                     f.createNewFile();
-                    f.delete();
-                    f.createNewFile();
                 } catch (AccessControlException e) {
                     e.printStackTrace();
                     logTextArea.append("Filesystem access error: " + e.getMessage() + "\n");
@@ -190,13 +181,10 @@ class ParseManager {
                     logTextArea.append("Filesystem error: " + e.getMessage() + "\n");
                 }
                 secondaryProgressBar.setValue(i);
-                secondaryProgressBar.setString("PDF" + (i + 1) + " written to disk");
+                secondaryProgressBar.setString("PDF " + (i + 1) + " written to disk");
                 logTextArea.append("PDF" + (i + 1) + " written to disk\n");
                 if (!ParseManager.isWork) {
-                    mainProgressBar.setValue(0);
-                    mainProgressBar.setString("Canceled");
-                    secondaryProgressBar.setValue(0);
-                    secondaryProgressBar.setString("Canceled");
+                    Main.cancelOnProgressBar(mainProgressBar, secondaryProgressBar);
                     for (int j = i; j > -1; j--) {
                         File file = new File(output.getAbsolutePath() + File.separator + prefix + "-" + (i + 1) + "-part.pdf");
                         try {

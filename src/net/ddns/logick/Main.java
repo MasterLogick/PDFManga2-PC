@@ -1,4 +1,4 @@
-package org.ddns.logick;
+package net.ddns.logick;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -13,7 +13,8 @@ import java.io.IOException;
 import java.net.URI;
 
 public class Main {
-    static final int THREADS_COUNT = 10;
+    static final String USAGE_STRING = "Usage: java -jar PDFManga2.jar [THREADS_COUNT]\n[THREADS_COUNT] - optional parameter that sets amount of image downloading threads, 10 - default";
+    static int THREADS_COUNT = 10;
     private JFrame frame;
     private JFileChooser fileChooser;
     private JPanel mainPanel;
@@ -114,7 +115,7 @@ public class Main {
     }
 
     private void initListeners() {
-        menuItem.addActionListener(actionEvent -> JOptionPane.showMessageDialog(frame, "PDFManga 2\nOpen-source application for downloading manga from \"readmanga\" group and \"manga-chan\" group sites\nWritten by: MasterLogick\nGithub: https://github.com/MasterLogick\n Version: 1.0.0"));
+        menuItem.addActionListener(actionEvent -> JOptionPane.showMessageDialog(frame, "PDFManga 2\nOpen-source application for downloading manga from \"readmanga\" group sites\nWritten by: MasterLogick\nGithub: https://github.com/MasterLogick\n Version: 2.0.0"));
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -126,6 +127,10 @@ public class Main {
             if (!urlTextField.getText().isEmpty()) {
                 MangaData mangaData;
                 mangaData = ParseManager.parse(urlTextField.getText(), logTextArea);
+                if (mangaData == null) {
+                    JOptionPane.showMessageDialog(frame, "Unknown domain: " + URI.create(urlTextField.getText()).getHost());
+                    return;
+                }
                 coverLabel.setIcon(mangaData.cover);
                 descriptionLabel.setText(mangaData.htmlData);
                 checkPanel.setVisible(true);
@@ -149,16 +154,18 @@ public class Main {
             isDivideEnabled = !isDivideEnabled;
             if (isDivideEnabled) {
                 outputNameLabel.setText("Output folder");
+                String uselessFilePath = outputPathTextField.getText();
+                int index = uselessFilePath.toLowerCase().lastIndexOf(".pdf");
+                outputPathTextField.setText(uselessFilePath.substring(0, index <= 0 ? uselessFilePath.length() : index));
                 enableChildren(divisionPanel, prefixPanel);
                 fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                fileChooser.resetChoosableFileFilters();
-                fileChooser.addChoosableFileFilter(dirFilter);
+                fileChooser.setFileFilter(dirFilter);
             } else {
                 outputNameLabel.setText("Output file");
+                outputPathTextField.setText(outputPathTextField.getText() + ".pdf");
                 disableChildren(divisionPanel, prefixPanel);
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fileChooser.resetChoosableFileFilters();
-                fileChooser.addChoosableFileFilter(pdfFilter);
+                fileChooser.setFileFilter(pdfFilter);
             }
         });
         browseButton.addActionListener(actionEvent -> {
@@ -169,13 +176,17 @@ public class Main {
             }
         });
         cancelButton.addActionListener(actionEvent -> ParseManager.cancel());
-        startButton.addActionListener(actionEvent -> new Thread(() -> ParseManager.download(
-                URI.create(urlTextField.getText()),
-                isFullDownload ? 1 : Integer.parseInt(startChapterNumberTextField.getText()),
-                isFullDownload ? maxChaptersCount : Integer.parseInt(endChapterNumberTextField.getText()),
-                isDivideEnabled ? Integer.parseInt(divisionCountTextField.getText()) : 1, selectedFile,
-                logTextArea, prefixTextField.getText().isEmpty() ? "" : prefixTextField.getText(),
-                mainProgressBar, secondaryProgressBar)).start());
+        startButton.addActionListener(actionEvent -> new Thread(() -> {
+            startButton.setEnabled(false);
+            ParseManager.download(
+                    URI.create(urlTextField.getText()),
+                    isFullDownload ? 1 : Integer.parseInt(startChapterNumberTextField.getText()),
+                    isFullDownload ? maxChaptersCount : Integer.parseInt(endChapterNumberTextField.getText()),
+                    isDivideEnabled ? Integer.parseInt(divisionCountTextField.getText()) : 1, selectedFile,
+                    logTextArea, prefixTextField.getText().isEmpty() ? "" : prefixTextField.getText(),
+                    mainProgressBar, secondaryProgressBar);
+            startButton.setEnabled(true);
+        }).start());
         clearLogButton.addActionListener(actionEvent -> logTextArea.setText(""));
         outputPathTextField.addFocusListener(new FocusAdapter() {
             @Override
@@ -246,6 +257,14 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        try {
+            if (args.length != 0) THREADS_COUNT = Integer.parseInt(args[0]);
+        } catch (NumberFormatException e) {
+            System.out.println(USAGE_STRING);
+            JOptionPane.showMessageDialog(null, USAGE_STRING);
+            System.exit(0);
+        }
+        ParseManager.addParser(new ReadMangaParser(), "readmanga.me", "mintmanga.com");
         new Main().show();
     }
 
@@ -271,5 +290,12 @@ public class Main {
                 comp.setEnabled(false);
             }
         }
+    }
+
+    static void cancelOnProgressBar(JProgressBar main, JProgressBar secondary) {
+        main.setValue(0);
+        main.setString("Canceled");
+        secondary.setValue(0);
+        secondary.setString("Canceled");
     }
 }

@@ -1,4 +1,4 @@
-package org.ddns.logick;
+package net.ddns.logick;
 
 import javax.swing.*;
 
