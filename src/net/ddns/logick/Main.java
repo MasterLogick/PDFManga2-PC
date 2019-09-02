@@ -264,7 +264,7 @@ public class Main {
             JOptionPane.showMessageDialog(null, USAGE_STRING);
             System.exit(0);
         }
-        ParseManager.addParser(new ReadMangaParser(), "readmanga.me", "mintmanga.com");
+        ParseManager.addParser(new ReadMangaParser(), "readmanga.me", "mintmanga.com","selfmanga.ru");
         new Main().show();
     }
 
