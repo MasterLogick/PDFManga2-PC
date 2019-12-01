@@ -57,7 +57,7 @@
             </constraints>
             <properties>
               <labelFor value="5fd77"/>
-              <text value="URL"/>
+              <text value="URL1"/>
               <visible value="true"/>
             </properties>
           </component>

@@ -6,7 +6,7 @@
 
     <groupId>logick.ddns.org</groupId>
     <artifactId>PDFManga</artifactId>
-    <version>1.0</version>
+    <version>3.0</version>
     <packaging>jar</packaging>
     <build>
         <resources>
@@ -84,6 +84,10 @@
             <artifactId>commons-compress</artifactId>
             <version>1.19</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+            <version>7.0.3</version>
+        </dependency>
     </dependencies>
 </project>

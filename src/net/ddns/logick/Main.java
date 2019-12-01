@@ -1,5 +1,9 @@
 package net.ddns.logick;
 
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -168,144 +172,11 @@ public class Main {
         secondary.setString(Language.get("progress.canceled"));
     }
 
-    private void initListeners() {
-        aboutMenuItem.addActionListener(actionEvent -> JOptionPane.showMessageDialog(frame, Language.get("message.about")));
-
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                ParseManager.cancel();
-                System.exit(0);
-            }
-        });
-
-        settingsMenuItem.addActionListener(actionEvent -> {
-            new MyPreferences().show();
-        });
-
-        checkButton.addActionListener(actionEvent -> {
-            checkButtonPressed();
-        });
-        toZipCheckbox.addActionListener(actionEvent -> {
-            isToZipFile = !isToZipFile;
-            if (isToZipFile) {
-                enableDivision();
-                disableChildren(onStartDisabledContainers);
-                enableChildren(onZipEnabledContainers);
-            } else {
-                disableDivision();
-                disableChildren(onStartDisabledContainers);
-                enableChildren(onCheckEnabledContainers);
-                if (isDivideEnabled) {
-                    enableChildren(divisionPanel);
-                }
-            }
-        });
-        downloadFullMangaCheckBox.addActionListener(actionEvent -> {
-            isFullDownload = !isFullDownload;
-            if (isFullDownload) {
-                disableChildren(chaptersPanel);
-            } else {
-                enableChildren(chaptersPanel);
-            }
-        });
-
-        divideMangaCheckBox.addActionListener(actionEvent -> {
-            isDivideEnabled = !isDivideEnabled;
-            if (isDivideEnabled) enableDivision();
-            else disableDivision();
-        });
-
-        browseButton.addActionListener(actionEvent -> {
-            browseButtonPressed();
-        });
-
-        cancelButton.addActionListener(actionEvent -> {
-            cancelButtonPressed();
-        });
-
-        startButton.addActionListener(actionEvent -> new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startButtonPressed();
-            }
-        }).start());
-
-        clearLogButton.addActionListener(actionEvent -> logTextArea.setText(""));
-
-        outputPathTextField.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (!outputPathTextField.getText().isEmpty()) {
-                    String path = outputPathTextField.getText().trim();
-                    File f = new File(path);
-                    if (!path.equals(selectedFile.getAbsolutePath()) && f.exists() &&
-                            fileChooser.accept(f)) {
-                        selectedFile = f;
-                        enableChildren(controlPanel);
-                    }
-                }
-            }
-        });
-
-        startChapterNumberTextField.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                try {
-                    int val = Integer.parseInt(startChapterNumberTextField.getText());
-                    if (val < 1)
-                        startChapterNumberTextField.setText("1");
-                    if (val > Integer.parseInt(endChapterNumberTextField.getText())) {
-                        startChapterNumberTextField.setText(endChapterNumberTextField.getText());
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    logTextArea.append(String.format(Language.get("message.NaN") + "\n", startChapterNumberTextField.getText()));
-                    startChapterNumberTextField.setText("");
-                }
-            }
-        });
-
-        divisionCountTextField.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                try {
-                    Integer.parseInt(divisionCountTextField.getText());
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    logTextArea.append(String.format(Language.get("message.NaN") + "\n", divisionCountTextField.getText()));
-                    divisionCountTextField.setText("");
-                }
-            }
-        });
-
-        endChapterNumberTextField.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(FocusEvent e) {
-                try {
-                    int val = Integer.parseInt(endChapterNumberTextField.getText());
-                    if (val < Integer.parseInt(startChapterNumberTextField.getText()))
-                        endChapterNumberTextField.setText(startChapterNumberTextField.getText());
-                    if (val > maxChaptersCount) {
-                        endChapterNumberTextField.setText(String.valueOf(maxChaptersCount));
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    logTextArea.append(String.format(Language.get("message.NaN") + "\n", endChapterNumberTextField.getText()));
-                    endChapterNumberTextField.setText("");
-                }
-            }
-        });
-
-        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
-        scrollBar.addAdjustmentListener(e -> {
-            Adjustable aj = e.getAdjustable();
-            if (autoScrollToBottom) {
-                if (scrollValue - aj.getValue() >= 45) autoScrollToBottom = false;
-                else scrollBar.setValue(scrollBar.getMaximum());
-            } else if (aj.getValue() + aj.getVisibleAmount() == aj.getMaximum()) autoScrollToBottom = true;
-            scrollValue = aj.getValue();
-        });
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
     }
 
     private void show() {
@@ -432,4 +303,308 @@ public class Main {
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setFileFilter(pdfFilter);
     }
+
+    private void initListeners() {
+        aboutMenuItem.addActionListener(actionEvent -> JOptionPane.showMessageDialog(frame, Language.get("message.about")));
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                ParseManager.cancel();
+                System.exit(0);
+            }
+        });
+
+        settingsMenuItem.addActionListener(actionEvent -> {
+            new MyPreferences().show();
+        });
+
+        checkButton.addActionListener(actionEvent -> {
+            checkButtonPressed();
+        });
+        toZipCheckbox.addActionListener(actionEvent -> {
+            isToZipFile = !isToZipFile;
+            if (isToZipFile) {
+                enableDivision();
+                disableChildren(onStartDisabledContainers);
+                enableChildren(onZipEnabledContainers);
+            } else {
+                disableDivision();
+                disableChildren(onStartDisabledContainers);
+                enableChildren(onCheckEnabledContainers);
+                if (isDivideEnabled) {
+                    enableChildren(divisionPanel);
+                }
+            }
+        });
+        downloadFullMangaCheckBox.addActionListener(actionEvent -> {
+            isFullDownload = !isFullDownload;
+            if (isFullDownload) {
+                disableChildren(chaptersPanel);
+            } else {
+                enableChildren(chaptersPanel);
+            }
+        });
+
+        divideMangaCheckBox.addActionListener(actionEvent -> {
+            isDivideEnabled = !isDivideEnabled;
+            if (isDivideEnabled) enableDivision();
+            else disableDivision();
+        });
+
+        browseButton.addActionListener(actionEvent -> {
+            browseButtonPressed();
+        });
+
+        cancelButton.addActionListener(actionEvent -> {
+            cancelButtonPressed();
+        });
+
+        startButton.addActionListener(actionEvent -> new Thread(this::startButtonPressed).start());
+
+        clearLogButton.addActionListener(actionEvent -> logTextArea.setText(""));
+
+        outputPathTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (!outputPathTextField.getText().isEmpty()) {
+                    String path = outputPathTextField.getText().trim();
+                    File f = new File(path);
+                    if (!path.equals(selectedFile.getAbsolutePath()) && f.exists() &&
+                            fileChooser.accept(f)) {
+                        selectedFile = f;
+                        enableChildren(controlPanel);
+                    }
+                }
+            }
+        });
+
+        startChapterNumberTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                try {
+                    int val = Integer.parseInt(startChapterNumberTextField.getText());
+                    if (val < 1)
+                        startChapterNumberTextField.setText("1");
+                    if (val > Integer.parseInt(endChapterNumberTextField.getText())) {
+                        startChapterNumberTextField.setText(endChapterNumberTextField.getText());
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    logTextArea.append(String.format(Language.get("message.NaN") + "\n", startChapterNumberTextField.getText()));
+                    startChapterNumberTextField.setText("");
+                }
+            }
+        });
+
+        divisionCountTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                try {
+                    Integer.parseInt(divisionCountTextField.getText());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    logTextArea.append(String.format(Language.get("message.NaN") + "\n", divisionCountTextField.getText()));
+                    divisionCountTextField.setText("");
+                }
+            }
+        });
+
+        endChapterNumberTextField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                try {
+                    int val = Integer.parseInt(endChapterNumberTextField.getText());
+                    if (val < Integer.parseInt(startChapterNumberTextField.getText()))
+                        endChapterNumberTextField.setText(startChapterNumberTextField.getText());
+                    if (val > maxChaptersCount) {
+                        endChapterNumberTextField.setText(String.valueOf(maxChaptersCount));
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    logTextArea.append(String.format(Language.get("message.NaN") + "\n", endChapterNumberTextField.getText()));
+                    endChapterNumberTextField.setText("");
+                }
+            }
+        });
+
+        JScrollBar scrollBar = scrollPane.getVerticalScrollBar();
+        scrollBar.addAdjustmentListener(e -> {
+            Adjustable aj = e.getAdjustable();
+            if (autoScrollToBottom) {
+                if (scrollValue - aj.getValue() >= 45) autoScrollToBottom = false;
+                else scrollBar.setValue(scrollBar.getMaximum());
+            } else if (aj.getValue() + aj.getVisibleAmount() == aj.getMaximum()) autoScrollToBottom = true;
+            scrollValue = aj.getValue();
+        });
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new GridLayoutManager(12, 1, new Insets(0, 0, 0, 0), -1, -1));
+        checkPanel = new JPanel();
+        checkPanel.setLayout(new GridLayoutManager(1, 2, new Insets(5, 5, 5, 5), -1, -1));
+        checkPanel.setVisible(false);
+        mainPanel.add(checkPanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        coverLabel = new JLabel();
+        coverLabel.setEnabled(true);
+        coverLabel.setText("");
+        coverLabel.setVisible(true);
+        checkPanel.add(coverLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(156, 218), new Dimension(156, 218), new Dimension(156, 218), 0, false));
+        descriptionLabel = new JLabel();
+        descriptionLabel.setText("Label");
+        descriptionLabel.setVerticalAlignment(0);
+        checkPanel.add(descriptionLabel, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        urlPanel = new JPanel();
+        urlPanel.setLayout(new GridLayoutManager(1, 3, new Insets(5, 0, 0, 0), -1, -1));
+        mainPanel.add(urlPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        urlLabel = new JLabel();
+        urlLabel.setText("URL1");
+        urlLabel.setVisible(true);
+        urlPanel.add(urlLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        urlTextField = new JTextField();
+        urlTextField.setToolTipText("Enter manga main page address");
+        urlPanel.add(urlTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        checkButton = new JButton();
+        checkButton.setText("Check");
+        urlPanel.add(checkButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        chaptersPanel = new JPanel();
+        chaptersPanel.setLayout(new GridLayoutManager(1, 6, new Insets(0, 0, 0, 0), -1, -1));
+        chaptersPanel.setEnabled(false);
+        mainPanel.add(chaptersPanel, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        downloadBeforeLabel = new JLabel();
+        downloadBeforeLabel.setText("Download from");
+        chaptersPanel.add(downloadBeforeLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer1 = new Spacer();
+        chaptersPanel.add(spacer1, new GridConstraints(0, 5, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        startChapterNumberTextField = new JTextField();
+        startChapterNumberTextField.setColumns(4);
+        startChapterNumberTextField.setText("");
+        chaptersPanel.add(startChapterNumberTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        downloadBetweenLabel = new JLabel();
+        downloadBetweenLabel.setText("to");
+        chaptersPanel.add(downloadBetweenLabel, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        endChapterNumberTextField = new JTextField();
+        endChapterNumberTextField.setColumns(4);
+        chaptersPanel.add(endChapterNumberTextField, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        downloadAfterLabel = new JLabel();
+        downloadAfterLabel.setText("");
+        chaptersPanel.add(downloadAfterLabel, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        outputPanel = new JPanel();
+        outputPanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        outputPanel.setEnabled(false);
+        mainPanel.add(outputPanel, new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        outputNameLabel = new JLabel();
+        outputNameLabel.setText("Output file");
+        outputPanel.add(outputNameLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        outputPathTextField = new JTextField();
+        outputPanel.add(outputPathTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        browseButton = new JButton();
+        browseButton.setText("Browse");
+        outputPanel.add(browseButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        divisionPanel = new JPanel();
+        divisionPanel.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
+        divisionPanel.setEnabled(false);
+        mainPanel.add(divisionPanel, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        divideBeforeLabel = new JLabel();
+        divideBeforeLabel.setText("Divide on");
+        divisionPanel.add(divideBeforeLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer2 = new Spacer();
+        divisionPanel.add(spacer2, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        divisionCountTextField = new JTextField();
+        divisionCountTextField.setColumns(4);
+        divisionPanel.add(divisionCountTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        divideAfterLabel = new JLabel();
+        divideAfterLabel.setText("files");
+        divisionPanel.add(divideAfterLabel, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        controlPanel = new JPanel();
+        controlPanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        controlPanel.setEnabled(false);
+        mainPanel.add(controlPanel, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        cancelButton = new JButton();
+        cancelButton.setText("Cancel");
+        controlPanel.add(cancelButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        startButton = new JButton();
+        startButton.setText("Start");
+        controlPanel.add(startButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer3 = new Spacer();
+        controlPanel.add(spacer3, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        processPanel = new JPanel();
+        processPanel.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
+        mainPanel.add(processPanel, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        mainProgressBar = new JProgressBar();
+        mainProgressBar.setMaximum(6);
+        mainProgressBar.setString("");
+        mainProgressBar.setStringPainted(true);
+        processPanel.add(mainProgressBar, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        secondaryProgressBar = new JProgressBar();
+        secondaryProgressBar.setString("");
+        secondaryProgressBar.setStringPainted(true);
+        processPanel.add(secondaryProgressBar, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        scrollPane = new JScrollPane();
+        scrollPane.setAutoscrolls(true);
+        processPanel.add(scrollPane, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        logTextArea = new JTextArea();
+        logTextArea.setEditable(false);
+        logTextArea.setRows(20);
+        scrollPane.setViewportView(logTextArea);
+        clearLogButton = new JButton();
+        clearLogButton.setText("Clear log");
+        mainPanel.add(clearLogButton, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        fullDownloadCheckboxPanel = new JPanel();
+        fullDownloadCheckboxPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        mainPanel.add(fullDownloadCheckboxPanel, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        downloadFullMangaCheckBox = new JCheckBox();
+        downloadFullMangaCheckBox.setEnabled(true);
+        downloadFullMangaCheckBox.setSelected(true);
+        downloadFullMangaCheckBox.setText("Download full manga");
+        fullDownloadCheckboxPanel.add(downloadFullMangaCheckBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer4 = new Spacer();
+        fullDownloadCheckboxPanel.add(spacer4, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        divisionCheckBoxPanel = new JPanel();
+        divisionCheckBoxPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        mainPanel.add(divisionCheckBoxPanel, new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        divideMangaCheckBox = new JCheckBox();
+        divideMangaCheckBox.setEnabled(true);
+        divideMangaCheckBox.setText("Divide manga to different files");
+        divisionCheckBoxPanel.add(divideMangaCheckBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer5 = new Spacer();
+        divisionCheckBoxPanel.add(spacer5, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        prefixPanel = new JPanel();
+        prefixPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        mainPanel.add(prefixPanel, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        filesPrefixLabel = new JLabel();
+        filesPrefixLabel.setText("Files prefix");
+        prefixPanel.add(filesPrefixLabel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        prefixTextField = new JTextField();
+        prefixPanel.add(prefixTextField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        toZipPanel = new JPanel();
+        toZipPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        mainPanel.add(toZipPanel, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 1, false));
+        toZipCheckbox = new JCheckBox();
+        toZipCheckbox.setEnabled(true);
+        toZipCheckbox.setText("To Zip Files");
+        toZipPanel.add(toZipCheckbox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final Spacer spacer6 = new Spacer();
+        toZipPanel.add(spacer6, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        urlLabel.setLabelFor(urlTextField);
+        downloadBeforeLabel.setLabelFor(startChapterNumberTextField);
+        downloadBetweenLabel.setLabelFor(endChapterNumberTextField);
+        outputNameLabel.setLabelFor(outputPathTextField);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return mainPanel;
+    }
+
 }
