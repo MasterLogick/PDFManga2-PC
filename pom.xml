@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>logick.ddns.org</groupId>
-    <artifactId>PDFManga</artifactId>
-    <version>3.0</version>
+    <artifactId>PDFManga2</artifactId>
+    <version>3.1.0</version>
     <packaging>jar</packaging>
     <build>
         <resources>

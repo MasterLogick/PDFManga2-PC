@@ -3,6 +3,7 @@ package net.ddns.logick;
 import javax.swing.*;
 
 class MangaData {
+    public static final MangaData EMPTY = new MangaData(null, "", "", "", 0);
     ImageIcon cover;
     String htmlData;
     String defaultFileName;

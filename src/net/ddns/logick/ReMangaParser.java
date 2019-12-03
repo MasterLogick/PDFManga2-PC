@@ -2,6 +2,7 @@ package net.ddns.logick;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import javax.imageio.ImageIO;
@@ -18,15 +19,13 @@ import java.util.TreeMap;
 public class ReMangaParser implements Parser {
 
     @Override
-    public MangaData parse(URI mangaMainPageURI, JTextArea logTextArea) {
-        Document mainPage = null;
-        try {
-            mainPage = Jsoup.connect(mangaMainPageURI.toString()).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-            logTextArea.append(String.format(Language.get("message.main_page_getting_error") + "\n", e.getMessage()));
+    public ImageIcon getCoverImage(Document mainPage, JTextArea logTextArea) {
+        Element imageElement = mainPage.selectFirst("meta[itemprop=image]");
+        if (imageElement == null) {
+            logTextArea.append(/*todo main page image parsing error message*/"\n");
+            return null;
         }
-        String coverPath = mainPage.selectFirst("meta[itemprop=image]").attr("content");
+        String coverPath = imageElement.attr("content");
         ImageIcon cover = null;
         try {
             cover = new ImageIcon(ParseManager.resize(ImageIO.read(new URL(coverPath)), 156, 218));
@@ -34,19 +33,35 @@ public class ReMangaParser implements Parser {
             e.printStackTrace();
             logTextArea.append(String.format(Language.get("message.cover_image_getting_error") + "\n", e.getMessage()));
         }
-        String[] html = mainPage.selectFirst("div.info").wholeText().split("\n");
-        StringBuilder sb = new StringBuilder("<html>" + mainPage.selectFirst("meta[itemprop=alternativeHeadline]").attr("content"));
+        return cover;
+    }
+
+    @Override
+    public String getHtmlEncodedData(Document mainPage, JTextArea logTextArea) {
+        Element infoElement = mainPage.selectFirst("div.info");
+        if (infoElement == null) {
+            logTextArea.append(/*todo main page info parsing error message*/"\n");
+            return null;
+        }
+        String[] html = infoElement.wholeText().split("\n");
+        Element alternativeNameElement = mainPage.selectFirst("meta[itemprop=alternativeHeadline]");
+        if (alternativeNameElement == null) {
+            logTextArea.append(/*todo main page alternative name parsing error message*/"\n");
+            return null;
+        }
+        StringBuilder sb = new StringBuilder("<html>" + alternativeNameElement.attr("content"));
         for (String s :
                 html) {
             if (s.isEmpty()) continue;
-            sb.append(s.trim() + "<br>");
+            sb.append(s.trim()).append("<br>");
         }
         sb.append("</html>");
-        String path = mangaMainPageURI.getPath();
-        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-        String defaultFileName = path.substring(path.lastIndexOf("/") + 1) + ".pdf";
-        int chapterCount = mainPage.select("div.chapter").size();
-        return new MangaData(cover, sb.toString(), defaultFileName, path.substring(path.lastIndexOf("/") + 1), chapterCount);
+        return sb.toString();
+    }
+
+    @Override
+    public int getChaptersCount(Document mainPage, JTextArea logTextArea) {
+        return mainPage.select("div.chapter").size();
     }
 
     @Override
@@ -63,7 +78,10 @@ public class ReMangaParser implements Parser {
             e.printStackTrace();
             logTextArea.append(String.format(Language.get("message.main_page_getting_error") + "\n", e.getMessage()));
         }
-
+        if (mainPage == null) {
+            logTextArea.append(/*todo main page downloading and parsing error message*/"\n");
+            return;
+        }
         Elements chapters = mainPage.select("a.name");
         from = chapters.size() - from + 1;
         to = chapters.size() - to + 1;
@@ -74,7 +92,7 @@ public class ReMangaParser implements Parser {
         ArrayList<String> imgURIs = new ArrayList<>();
         for (int i = 0; chaptersPathsIterator.previousIndex() >= to - 1; ) {
             try {
-                List arr = getImgRefs(mangaMainPageURI.resolve(chaptersPathsIterator.previous()).toString(), logTextArea);
+                List<String> arr = getImgRefs(mangaMainPageURI.resolve(chaptersPathsIterator.previous()).toString(), logTextArea);
                 imgURIs.addAll(arr);
                 tableOfContents.put(i, tableOfContentIterator.previous());
                 i += arr.size();

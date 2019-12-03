@@ -17,6 +17,8 @@ import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageXYZDestination;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -37,6 +39,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 class ParseManager {
+    private static final String EXTENSION = ".pdf";
     static RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(Main.TIMEOUT).setConnectTimeout(Main.TIMEOUT).build();
     static CloseableHttpAsyncClient httpclient = HttpAsyncClients.custom().setDefaultRequestConfig(requestConfig).build();
     static boolean isWork = false;
@@ -52,11 +55,37 @@ class ParseManager {
     static MangaData parse(String mangaMainPageURL, JTextArea logTextArea) {
         URI uri = URI.create(mangaMainPageURL);
         Parser parser = parsers.get(uri.getHost());
-        if (parser != null) return parser.parse(uri, logTextArea);
-        else {
+        if (parser != null) {
+            Document mainPage = null;
+            try {
+                mainPage = Jsoup.connect(mangaMainPageURL).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+//todo make better capturing
+            }
+            if (mainPage == null) {
+                logTextArea.append(/*todo main page downloading and parsing error message*/"\n");
+            }
+            ImageIcon cover = parser.getCoverImage(mainPage, logTextArea);
+            String htmlEncodedInfo = parser.getHtmlEncodedData(mainPage, logTextArea);
+            String defaultFilename = getDefaultFilename(mangaMainPageURL);
+            String defaultFilePrefix = getDefaultFilePrefix(mangaMainPageURL);
+            int chaptersCount = parser.getChaptersCount(mainPage, logTextArea);
+            return new MangaData(cover, htmlEncodedInfo, defaultFilename, defaultFilePrefix, chaptersCount);
+        } else {
             logTextArea.append(String.format(Language.get("message.unknown_domain") + "\n", uri.getHost()));
-            return null;
+            return MangaData.EMPTY;
         }
+    }
+
+    private static String getDefaultFilePrefix(String mangaMainPageURL) {
+        String path = mangaMainPageURL;
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+        return path.substring(path.lastIndexOf("/") + 1);
+    }
+
+    private static String getDefaultFilename(String mangaMainPageURL) {
+        return getDefaultFilePrefix(mangaMainPageURL) + EXTENSION;
     }
 
     static void toZipFiles(URI mangaMainPageURI, int from, int to, File output, JTextArea logTextArea, String prefix, JProgressBar mainProgressBar, JProgressBar secondaryProgressBar) {
