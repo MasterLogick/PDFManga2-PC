@@ -1,6 +1,5 @@
 package net.ddns.logick;
 
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -17,7 +16,7 @@ public class ReMangaParser implements Parser {
     public ImageIcon getCoverImage(Document mainPage) {
         Element imageElement = mainPage.selectFirst("meta[itemprop=image]");
         if (imageElement == null) {
-            Main.LOG.error(/*todo main page image parsing error message*/"");
+            Main.LOG.error(Language.get("message.error.cover_image_getting"));
             return null;
         }
         String coverPath = imageElement.attr("content");
@@ -25,8 +24,7 @@ public class ReMangaParser implements Parser {
         try {
             cover = new ImageIcon(ParseManager.resize(ImageIO.read(new URL(coverPath)), 156, 218));
         } catch (IOException e) {
-            e.printStackTrace();
-            Main.LOG.error(String.format(Language.get("message.cover_image_getting_error"), e.getMessage()), e);
+            Main.LOG.error(String.format(Language.get("message.error.cover_image_getting")), e);
         }
         return cover;
     }
@@ -35,16 +33,16 @@ public class ReMangaParser implements Parser {
     public String getHtmlEncodedData(Document mainPage) {
         Element infoElement = mainPage.selectFirst("div.info");
         if (infoElement == null) {
-            Main.LOG.error(/*todo main page info parsing error message*/"");
+            Main.LOG.error(Language.get("message.error.title_info_getting"));
             return null;
         }
         String[] html = infoElement.wholeText().split("\n");
         Element alternativeNameElement = mainPage.selectFirst("meta[itemprop=alternativeHeadline]");
         if (alternativeNameElement == null) {
-            Main.LOG.error(/*todo main page alternative name parsing error message*/"");
-            return null;
+            Main.LOG.debug(Language.get("message.error.alternative_name_not_found"));
+            alternativeNameElement = new Element("<h1/>");
         }
-        StringBuilder sb = new StringBuilder("<html>" + alternativeNameElement.attr("content"));
+        StringBuilder sb = new StringBuilder("<html>" + alternativeNameElement.attr("content") + "<br>");
         for (String s :
                 html) {
             if (s.isEmpty()) continue;
@@ -79,16 +77,5 @@ public class ReMangaParser implements Parser {
     @Override
     public void preparePostProcessor(PostDownloadingProcessing postProcessor) {
         postProcessor.setBanner(Language.get("banner.remanga"));
-    }
-
-    private List<String> getImgRefs(String chapterURI, JTextArea logTextArea) {
-        Document page = null;
-        try {
-            page = Jsoup.connect(chapterURI).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-            logTextArea.append(String.format(Language.get("message.main_page_getting_error") + "\n", e.getMessage()));
-        }
-        return page.select("img.owl-lazy").eachAttr("data-src");
     }
 }

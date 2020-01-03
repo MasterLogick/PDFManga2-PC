@@ -71,8 +71,7 @@ public class MyPreferences {
         try {
             pref.flush();
         } catch (BackingStoreException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, Language.get("message.preferences_saving_error"));
+            Main.LOG.error(Language.get("message.error.preferences_saving"), e);
         }
     }
 
@@ -204,7 +203,7 @@ public class MyPreferences {
         panel5.add(label1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer3 = new Spacer();
         panel5.add(spacer3, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        languageComboBox = new JComboBox<String>();
+        languageComboBox = new JComboBox();
         panel5.add(languageComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel6 = new JPanel();
         panel6.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));

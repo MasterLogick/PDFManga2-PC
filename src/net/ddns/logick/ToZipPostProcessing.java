@@ -23,7 +23,7 @@ public class ToZipPostProcessing implements PostDownloadingProcessing {
 
     @Override
     public void postProcess(BufferedImage[] images, TreeMap<Integer, String> tableOfContents) {
-        Main.increaseAndUpdateMainProgressBarState(Language.get("message.page_adding_status"));
+        Main.increaseAndUpdateMainProgressBarState(Language.get("message.status.push_to_disk"));
         Main.initialiseSecondaryProgressBar(images.length, "");
         Map.Entry<Integer, String>[] table = new Map.Entry[tableOfContents.size()];
         table = tableOfContents.entrySet().toArray(table);
@@ -31,7 +31,7 @@ public class ToZipPostProcessing implements PostDownloadingProcessing {
             try {
                 File f = new File(output.getAbsolutePath() + File.separator + prefix + "-part-" + (i + 1) + ".zip");
                 Files.deleteIfExists(Paths.get(f.getPath()));
-                f.createNewFile();
+                Files.createFile(Paths.get(f.getPath()));
                 ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(f));
                 int endIndex = ((i + 1 < table.length) ? table[i + 1].getKey() : images.length);
                 for (int j = table[i].getKey(); j < endIndex; j++) {
@@ -40,15 +40,15 @@ public class ToZipPostProcessing implements PostDownloadingProcessing {
                     if (Thread.interrupted()) {
                         return;
                     }
-                    Main.LOG.info(String.format(Language.get("message.image_added"), j + 1, i + 1));
-                    Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.image_added"), j + 1, i + 1));
+                    Main.LOG.info(String.format(Language.get("message.info.image_added"), j + 1, i + 1));
+                    Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.image_added"), j + 1, i + 1));
                     if (Thread.interrupted()) {
                         return;
                     }
                 }
                 zos.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Main.LOG.error(Language.get("message.error.filesystem"), e);
             }
         }
         Main.completedOnProgressBar();

@@ -17,7 +17,7 @@ public class ReadMangaParser implements Parser {
     public ImageIcon getCoverImage(Document mainPage) {
         Element imageElement = mainPage.selectFirst("img[itemprop=\"image\"]");
         if (imageElement == null) {
-            Main.LOG.error(/*todo main page image parsing error message*/"");
+            Main.LOG.error(Language.get("message.error.cover_image_getting"));
             return null;
         }
         String coverPath = imageElement.attr("src");
@@ -25,8 +25,7 @@ public class ReadMangaParser implements Parser {
         try {
             cover = new ImageIcon(ParseManager.resize(ImageIO.read(new URL(coverPath)), 156, 218));
         } catch (IOException e) {
-            e.printStackTrace();
-            Main.LOG.error(String.format(Language.get("message.cover_image_getting_error"), e.getMessage()));
+            Main.LOG.error(String.format(Language.get("message.error.cover_image_getting")), e);
         }
         return cover;
     }
@@ -35,7 +34,7 @@ public class ReadMangaParser implements Parser {
     public String getHtmlEncodedData(Document mainPage) {
         Element infoElem = mainPage.selectFirst("div.subject-meta");
         if (infoElem == null) {
-            Main.LOG.error(/*todo main page info parsing error message*/"");
+            Main.LOG.error(Language.get("message.error.title_info_getting"));
             return null;
         }
         Elements ps = infoElem.select("p");
@@ -53,7 +52,7 @@ public class ReadMangaParser implements Parser {
     public int getChaptersCount(Document mainPage) {
         Element chapters = mainPage.selectFirst("table.table-hover");
         if (chapters == null) {
-            Main.LOG.error(Language.get("message.do_not_have_chapters"));
+            Main.LOG.error(Language.get("message.error.no_chapters"));
             return 0;
         }
         return chapters.select("a").size();
@@ -63,7 +62,7 @@ public class ReadMangaParser implements Parser {
     public List<String> getChaptersLocations(Document mainPage) {
         Element tableHoverElement = mainPage.selectFirst("table.table-hover");
         if (tableHoverElement == null) {
-            Main.LOG.error(/*todo chapters locations getting error message*/"");
+            Main.LOG.error(Language.get("message.error.chapters_locations_getting"));
             return null;
         }
         Elements refs = tableHoverElement.select("a");
@@ -74,7 +73,7 @@ public class ReadMangaParser implements Parser {
     public List<String> getChaptersNames(Document mainPage) {
         Element tableHoverElement = mainPage.selectFirst("table.table-hover");
         if (tableHoverElement == null) {
-            Main.LOG.error(/*todo chapters locations getting error message*/"");
+            Main.LOG.error(Language.get("message.error.chapters_locations_getting"));
             return null;
         }
         Elements refs = tableHoverElement.select("a");

@@ -4,9 +4,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.net.URI;
 import java.util.ListIterator;
 import java.util.concurrent.Future;
@@ -53,21 +51,17 @@ public class DownloaderThread extends Thread {
                     bi = ImageIO.read(response.get().getEntity().getContent());
                 } catch (Exception e) {
                     retries++;
-                    try {
-                        if (retries == 1 && !ParseManager.isConnectedToNet(URI.create(s).getHost())) {
-                            JOptionPane.showMessageDialog(null, Language.get("message.no_connection"));
-                            Main.LOG.error(Language.get("message.no_connection"));
-                            return;
-                        }
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
+                    if (retries == 1 && ParseManager.isDisconnectedFormNet(URI.create(s).getHost())) {
+                        Main.LOG.error(Language.get("message.error.no_connection"));
+                        ParseManager.cancel();
+                        return;
                     }
                     e.printStackTrace();
-                    Main.LOG.error(String.format(Language.get("message.page_getting_error"), e.getMessage(), s, retries, Main.MAX_RETRIES));
+                    Main.LOG.error(String.format(Language.get("message.error.page_getting"), s, retries + 1, Main.MAX_RETRIES));
                 }
             images[next] = bi;
-            Main.LOG.info(String.format(Language.get("message.image_downloaded"), next + 1, images.length, number + 1));
-            Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.image_downloaded"), next + 1, images.length, number + 1));
+            Main.LOG.info(String.format(Language.get("message.info.image_downloaded"), next + 1, images.length, number + 1));
+            Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.image_downloaded"), next + 1, images.length, number + 1));
         }
     }
 }

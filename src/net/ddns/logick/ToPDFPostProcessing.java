@@ -5,7 +5,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDFontFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
@@ -17,7 +17,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.security.AccessControlException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,17 +47,20 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
         }
         createPages(images, docs, tableOfContents);
         addOutlines(outlines, tableOfContents);
-        Main.increaseAndUpdateMainProgressBarState(Language.get("message.writing"));
+        Main.increaseAndUpdateMainProgressBarState(Language.get("message.status.writing"));
         if (divisionCounter == 1) {
             try {
-                output.createNewFile();
+                Files.deleteIfExists(Paths.get(output.getPath()));
+                Files.createFile(Paths.get(output.getPath()));
                 docs[0].save(output);
                 docs[0].close();
             } catch (IOException e) {
-                e.printStackTrace();
-                Main.LOG.error(String.format(Language.get("message.filesystem_error") + "\n", e.getMessage()), e);
+                Main.LOG.error(String.format(Language.get("message.error.filesystem")), e);
+            } catch (SecurityException e) {
+                Main.LOG.error(Language.get("message.error.filesystem_access"), e);
             }
-            Main.LOG.info(Language.get("message.written_file"));
+            Main.LOG.info(Language.get("message.info.written_file"));
+            Main.increaseAndUpdateSecondaryProgressBarState(Language.get("message.info.written_file"));
         } else {
             Main.initialiseSecondaryProgressBar(docs.length, "");
             if (!output.exists()) {
@@ -65,33 +69,22 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
             for (int i = 0; i < docs.length; i++) {
                 File f = new File(output.getAbsolutePath() + File.separator + String.format(Language.get("file.name"), prefix, i + 1));
                 try {
-                    f.createNewFile();
-                } catch (AccessControlException e) {
-                    e.printStackTrace();
-                    Main.LOG.error(Language.get("message.filesystem_access_error"), e);
+                    Files.deleteIfExists(Paths.get(f.getPath()));
+                    Files.createFile(Paths.get(f.getPath()));
+                } catch (SecurityException e) {
+                    Main.LOG.error(Language.get("message.error.filesystem_access"), e);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    Main.LOG.error(/*todo make invalid file path error*/"");
+                    Main.LOG.error(Language.get("message.error.filesystem"), e);
                 }
                 try {
                     docs[i].save(f);
                     docs[i].close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Main.LOG.error(Language.get("message.error.filesystem"), e);
                 }
-                Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.written_part"), i + 1));
-                Main.LOG.info(String.format(Language.get("message.written_part"), i + 1));
+                Main.LOG.info(String.format(Language.get("message.info.written_part"), i + 1));
+                Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.written_part"), i + 1));
                 if (Thread.interrupted()) {
-                    /*for (int j = i; j >= 0; j--) {
-                        File file = new File(output.getAbsolutePath() + File.separator + String.format(Language.get("file.name"), prefix, i + 1));
-                        try {
-                            file.delete();
-                        } catch (AccessControlException e) {
-                            e.printStackTrace();
-                            Main.LOG.error(Language.get("message.filesystem_access_error"), e);
-                        }
-                        Main.LOG.info(String.format(Language.get("message.file_deleted"), f.getName()));
-                    }*/
                     return;
                 }
             }
@@ -101,7 +94,7 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
     }
 
     private void addOutlines(PDDocumentOutline[] outlines, TreeMap<Integer, String> tableOfContents) {
-        Main.increaseAndUpdateMainProgressBarState(Language.get("message.creating_contents"));
+        Main.increaseAndUpdateMainProgressBarState(Language.get("message.status.creating_contents"));
         Main.initialiseSecondaryProgressBar(tableOfContents.size(), "");
         Iterator<Map.Entry<Integer, String>> tableOfContentsIterator = tableOfContents.entrySet().iterator();
         int currentDoc = 0;
@@ -121,8 +114,8 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
             dest.setPageNumber(entry.getKey() - countedPages);
             outline.setDestination(dest);
             outlines[currentDoc].addLast(outline);
-            Main.LOG.info(String.format(Language.get("message.outline"), currentChapter + 1, tableOfContents.size()));
-            Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.outline"), currentChapter + 1, tableOfContents.size()));
+            Main.LOG.info(String.format(Language.get("message.info.outline"), currentChapter + 1, tableOfContents.size()));
+            Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.outline"), currentChapter + 1, tableOfContents.size()));
             currentChapter++;
         }
     }
@@ -131,19 +124,27 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
         PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
         PDFont font = null;
         try {
-            font = PDType0Font.load(docs[0], Main.class.getResourceAsStream("times.ttf"));
+//            font = PDType0Font.load(docs[0], Main.class.getResourceAsStream("times.ttf"));
+            font = PDFontFactory.createDefaultFont();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if (font == null) {
+            Main.LOG.error(Language.get("message.error.font_loading"));
+            banner = "";
         }
         int pos = 2;
         float fontSize = 14f;
         float width = 0;
-        try {
-            width = font.getStringWidth(banner) / 1000 * fontSize;
-        } catch (IOException e) {
-            e.printStackTrace();
-            //todo make better capturing
-        }
+        if (!banner.isEmpty())
+            try {
+                width = font.getStringWidth(banner) / 1000 * fontSize;
+            } catch (IOException e) {
+                Main.LOG.error(Language.get("message.error.font_width"), e);
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                Main.LOG.error(Language.get("message.error.unsupported_banner_character"), e);
+            }
         int currentDoc = 0;
         int currentChapter = 0;
         int nextChapter = tableOfContents.size() > 1 ? tableOfContents.ceilingKey(tableOfContents.firstKey() + 1) : Integer.MAX_VALUE;
@@ -176,12 +177,11 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
                 }
                 contents.close();
             } catch (IOException e) {
-                e.printStackTrace();
-                Main.LOG.error(String.format(Language.get("message.image_drawing_error"), e.getMessage()), e);
+                Main.LOG.error(String.format(Language.get("message.error.image_drawing")), e);
             }
             docs[currentDoc].addPage(page);
-            Main.LOG.info(String.format(Language.get("message.page_added"), i + 1, images.length));
-            Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.page_added"), i + 1, images.length));
+            Main.LOG.info(String.format(Language.get("message.info.page_added"), i + 1, images.length));
+            Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.page_added"), i + 1, images.length));
             if (Thread.interrupted()) {
                 return;
             }

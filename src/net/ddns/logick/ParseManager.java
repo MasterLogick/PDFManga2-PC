@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.List;
 import java.util.*;
@@ -35,44 +36,22 @@ class ParseManager {
         if (parser != null) {
             Document mainPage = null;
             try {
-                mainPage = Jsoup.connect(mangaMainPageURL).get();
+                mainPage = Jsoup.connect(mangaMainPageURL).timeout(Main.TIMEOUT).get();
+            } catch (SocketTimeoutException e) {
+                Main.LOG.error(Language.get("message.error.timeout"), e);
+                return MangaData.EMPTY;
             } catch (IOException e) {
-                e.printStackTrace();
-//todo make better capturing
-            }
-            if (mainPage == null) {
-                Main.LOG.error(/*todo main page downloading and parsing error message*/"");
+                Main.LOG.error(Language.get("message.error.main_page_getting"), e);
             }
             ImageIcon cover = parser.getCoverImage(mainPage);
             String htmlEncodedInfo = parser.getHtmlEncodedData(mainPage);
             String defaultFilename = getDefaultFilename(mangaMainPageURL);
             String defaultFilePrefix = getDefaultFilePrefix(mangaMainPageURL);
             int chaptersCount = parser.getChaptersCount(mainPage);
-            return new MangaData(cover, htmlEncodedInfo, defaultFilename, defaultFilePrefix, chaptersCount);
+            return new MangaData(uri, cover, htmlEncodedInfo, defaultFilename, defaultFilePrefix, chaptersCount);
         } else {
-            Main.LOG.error(String.format(Language.get("message.unknown_domain"), uri.getHost()));
+            Main.LOG.error(String.format(Language.get("message.error.unknown_domain"), uri.getHost()));
             return MangaData.EMPTY;
-        }
-    }
-
-    public static int getChaptersCount(String mangaMainPageURL, Document mainPage) {
-        URI uri = URI.create(mangaMainPageURL);
-        Parser parser = parsers.get(uri.getHost());
-        if (parser != null) {
-            try {
-                mainPage = Jsoup.connect(mangaMainPageURL).get();
-            } catch (IOException e) {
-                e.printStackTrace();
-//todo make better capturing
-            }
-            if (mainPage == null) {
-                Main.LOG.error(/*todo main page downloading and parsing error message*/"");
-            }
-            return parser.getChaptersCount(mainPage);
-
-        } else {
-            Main.LOG.error(String.format(Language.get("message.unknown_domain"), uri.getHost()));
-            return 0;
         }
     }
 
@@ -87,82 +66,86 @@ class ParseManager {
     }
 
     static void download(URI mangaMainPageURI, int from, int to, PostDownloadingProcessing postProcessor) {
-        try {
-            if (!isConnectedToNet(mangaMainPageURI.getHost())) {
-                JOptionPane.showMessageDialog(null, Language.get("message.no_connection") + "\n");
-                Main.LOG.error(Language.get("message.no_connection"));
-                return;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (isDisconnectedFormNet(mangaMainPageURI.getHost())) {
+            Main.LOG.error(Language.get("message.error.no_connection"));
+            cancel();
+            return;
         }
         Parser parser = parsers.get(mangaMainPageURI.getHost());
-        if (parser != null) {
-            List<String> chaptersLocations = null;
-            List<String> chaptersNames = null;
+        Document mainPage = null;
+        try {
+            mainPage = Jsoup.connect(mangaMainPageURI.toString()).timeout(Main.TIMEOUT).get();
+        } catch (SocketTimeoutException e) {
+            Main.LOG.error(Language.get("message.error.timeout"), e);
+            cancel();
+        } catch (IOException e) {
+            Main.LOG.error(Language.get("message.error.main_page_getting"), e);
+            cancel();
+        }
+        Main.initialiseSecondaryProgressBar(to - from + 1, "");
+        Main.increaseAndUpdateMainProgressBarState(Language.get("message.status.chapter_pages_parsing"));
+        List<String> chaptersLocations = parser.getChaptersLocations(mainPage);
+        List<String> chaptersNames = parser.getChaptersNames(mainPage);
+        URI resolver = URI.create(mangaMainPageURI.getScheme() + "://" + mangaMainPageURI.getHost());
+        ListIterator<String> chaptersLocationsIterator = chaptersLocations.listIterator(from - 1);
+        ListIterator<String> chapterNamesIterator = chaptersNames.listIterator(from - 1);
+        TreeMap<Integer, String> tableOfContents = new TreeMap<>();
+        ArrayList<String> imagesLocations = new ArrayList<>();
+        int currentLocatedImages = 0;
+        while (chaptersLocationsIterator.nextIndex() < to) {
             try {
-                Document mainPage = Jsoup.connect(mangaMainPageURI.toString()).get();
-                chaptersLocations = parser.getChaptersLocations(mainPage);
-                chaptersNames = parser.getChaptersNames(mainPage);
+                List<String> chapterImagesLocations = parser.getChapterImagesLocations(Jsoup.connect(resolver.resolve(chaptersLocationsIterator.next()).toString()).timeout(Main.TIMEOUT).get());
+                imagesLocations.addAll(chapterImagesLocations);
+                tableOfContents.put(currentLocatedImages, chapterNamesIterator.next());
+                currentLocatedImages += chapterImagesLocations.size();
+                Main.LOG.info(String.format(Language.get("message.info.chapter_page_parsed"), chaptersLocationsIterator.nextIndex() - from));
+            } catch (SocketTimeoutException e) {
+                Main.LOG.error(Language.get("message.error.timeout"), e);
+                cancel();
             } catch (IOException e) {
-                e.printStackTrace();
-//todo make better capturing
+                Main.LOG.error(Language.get("message.error.chapter_page_getting"), e);
+                cancel();
             }
-            if (chaptersLocations == null) {
-                Main.LOG.error(/*todo main page info parsing error message*/"");
-                Main.cancelOnProgressBar();
+        }
+        httpclient.start();
+        BufferedImage[] images = new BufferedImage[imagesLocations.size()];
+        ListIterator<String> imagesLocationsIterator = imagesLocations.listIterator();
+        DownloaderThread[] downloaderPull = new DownloaderThread[Main.THREADS_COUNT];
+        int threadsCount = Main.THREADS_COUNT;
+        Main.increaseAndUpdateMainProgressBarState(Language.get("message.status.downloading"));
+        Main.initialiseSecondaryProgressBar(images.length, "");
+        for (int i = 0; i < downloaderPull.length; i++) {
+            downloaderPull[i] = new DownloaderThread(i, imagesLocationsIterator, images);
+            downloaderPull[i].start();
+            Main.LOG.debug(String.format(Language.get("message.info.thread_started"), i));
+        }
+        for (int i = 0; i < threadsCount; i++) {
+            try {
+                downloaderPull[i].join();
+            } catch (InterruptedException e) {
+                for (DownloaderThread t : downloaderPull) {
+                    t.interrupt();
+                }
                 return;
             }
-            URI resolver = URI.create(mangaMainPageURI.getScheme() + "://" + mangaMainPageURI.getHost());
-            ListIterator<String> chaptersLocationsIterator = chaptersLocations.listIterator(from - 1);
-            ListIterator<String> chapterNamesIterator = chaptersNames.listIterator(from - 1);
-            TreeMap<Integer, String> tableOfContents = new TreeMap<>();
-            ArrayList<String> imagesLocations = new ArrayList<>();
-            int currentLocatedImages = 0;
-            while (chaptersLocationsIterator.nextIndex() < to) {
-                try {
-                    List<String> chapterImagesLocations = parser.getChapterImagesLocations(Jsoup.connect(resolver.resolve(chaptersLocationsIterator.next()).toString()).get());
-                    imagesLocations.addAll(chapterImagesLocations);
-                    tableOfContents.put(currentLocatedImages, chapterNamesIterator.next());
-                    currentLocatedImages += chapterImagesLocations.size();
-                } catch (IOException e) {
-                    e.printStackTrace();//todo make better capturing
-                }
-            }
-            httpclient.start();
-            BufferedImage[] images = new BufferedImage[imagesLocations.size()];
-            ListIterator<String> imagesLocationsIterator = imagesLocations.listIterator();
-            DownloaderThread[] downloaderPull = new DownloaderThread[Main.THREADS_COUNT];
-            int threadsCount = Main.THREADS_COUNT;
-            for (int i = 0; i < downloaderPull.length; i++) {
-                downloaderPull[i] = new DownloaderThread(i, imagesLocationsIterator, images);
-                downloaderPull[i].start();
-                Main.LOG.debug(String.format(Language.get("message.thread_started"), i));
-            }
-            for (int i = 0; i < threadsCount; i++) {
-                try {
-                    downloaderPull[i].join();
-                } catch (InterruptedException e) {
-                    for (DownloaderThread t : downloaderPull) {
-                        t.interrupt();
-                    }
-                    return;
-                }
-            }
-            parser.preparePostProcessor(postProcessor);
-            postProcessor.postProcess(images, tableOfContents);
-        } else
-            Main.LOG.error(String.format(Language.get("message.unknown_domain"), mangaMainPageURI.getHost()));
+        }
+        parser.preparePostProcessor(postProcessor);
+        postProcessor.postProcess(images, tableOfContents);
     }
 
-    public static boolean isConnectedToNet(String host) throws IOException {
-        return InetAddress.getByName(host).isReachable(Main.TIMEOUT);
+    public static boolean isDisconnectedFormNet(String host) {
+        try {
+            return !InetAddress.getByName(host).isReachable(Main.TIMEOUT);
+        } catch (Exception e) {
+            return true;
+        }
+
     }
 
     static void cancel() {
         Main.currentDownloadingThread.interrupt();
         Main.cancelOnProgressBar();
-        Main.LOG.debug(Language.get("message.canceled"));
+        Main.LOG.debug(Language.get("message.info.canceled"));
         System.gc();
     }
 
