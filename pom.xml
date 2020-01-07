@@ -6,7 +6,7 @@
 
     <groupId>logick.ddns.org</groupId>
     <artifactId>PDFManga2</artifactId>
-    <version>4.1.2</version>
+    <version>4.2.1</version>
     <packaging>jar</packaging>
     <build>
         <resources>
