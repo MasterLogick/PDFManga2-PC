@@ -23,6 +23,7 @@ public class Main {
     private static final Object secondaryLock = new Object();
     public static TextAreaLog LOG;
     static Thread currentDownloadingThread = null;
+    static boolean isInterrupted = false;
     static String CURRENT_LANGUAGE = "en";
     static int THREADS_COUNT = 10;
     static int TIMEOUT = 1000 * 30;
@@ -375,6 +376,7 @@ public class Main {
         cancelButton.addActionListener(actionEvent -> cancelButtonPressed());
 
         startButton.addActionListener(actionEvent -> {
+            isInterrupted = false;
             currentDownloadingThread = new Thread(this::startButtonPressed);
             currentDownloadingThread.start();
         });

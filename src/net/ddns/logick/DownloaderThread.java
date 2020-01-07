@@ -34,12 +34,13 @@ public class DownloaderThread extends Thread {
                     return;
                 }
             }
-            if (Thread.interrupted()) {
+            if (Main.isInterrupted) {
                 return;
             }
             try {
                 Thread.sleep(Main.REQUEST_COOLDOWN);
             } catch (InterruptedException e) {
+                System.out.println("test");
                 return;
             }
             BufferedImage bi = null;

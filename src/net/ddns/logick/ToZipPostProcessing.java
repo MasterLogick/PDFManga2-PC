@@ -37,12 +37,12 @@ public class ToZipPostProcessing implements PostDownloadingProcessing {
                 for (int j = table[i].getKey(); j < endIndex; j++) {
                     zos.putNextEntry(new ZipEntry((j - table[i].getKey()) + ".png"));
                     ImageIO.write(images[j], "png", zos);
-                    if (Thread.interrupted()) {
+                    if (Main.isInterrupted) {
                         return;
                     }
                     Main.LOG.info(String.format(Language.get("message.info.image_added"), j + 1, i + 1));
                     Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.image_added"), j + 1, i + 1));
-                    if (Thread.interrupted()) {
+                    if (Main.isInterrupted) {
                         return;
                     }
                 }

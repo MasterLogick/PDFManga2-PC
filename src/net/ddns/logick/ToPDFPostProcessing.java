@@ -84,7 +84,7 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
                 }
                 Main.LOG.info(String.format(Language.get("message.info.written_part"), i + 1));
                 Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.written_part"), i + 1));
-                if (Thread.interrupted()) {
+                if (Main.isInterrupted) {
                     return;
                 }
             }
@@ -182,7 +182,7 @@ public class ToPDFPostProcessing implements PostDownloadingProcessing {
             docs[currentDoc].addPage(page);
             Main.LOG.info(String.format(Language.get("message.info.page_added"), i + 1, images.length));
             Main.increaseAndUpdateSecondaryProgressBarState(String.format(Language.get("message.info.page_added"), i + 1, images.length));
-            if (Thread.interrupted()) {
+            if (Main.isInterrupted) {
                 return;
             }
         }

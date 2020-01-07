@@ -93,6 +93,9 @@ class ParseManager {
         ArrayList<String> imagesLocations = new ArrayList<>();
         int currentLocatedImages = 0;
         while (chaptersLocationsIterator.nextIndex() < to) {
+            if (Main.isInterrupted) {
+                return;
+            }
             try {
                 List<String> chapterImagesLocations = parser.getChapterImagesLocations(Jsoup.connect(resolver.resolve(chaptersLocationsIterator.next()).toString()).timeout(Main.TIMEOUT).get());
                 imagesLocations.addAll(chapterImagesLocations);
@@ -124,7 +127,11 @@ class ParseManager {
                 downloaderPull[i].join();
             } catch (InterruptedException e) {
                 for (DownloaderThread t : downloaderPull) {
-                    t.interrupt();
+                    try {
+                        t.join();
+                    } catch (InterruptedException ex) {
+                        Main.LOG.info("", e);
+                    }
                 }
                 return;
             }
@@ -143,8 +150,15 @@ class ParseManager {
     }
 
     static void cancel() {
-        if (Main.currentDownloadingThread != null)
-            Main.currentDownloadingThread.interrupt();
+        if (Main.currentDownloadingThread != null) {
+            System.out.println("test");
+            Main.isInterrupted = true;
+            try {
+                Main.currentDownloadingThread.join();
+            } catch (InterruptedException e) {
+                Main.LOG.info("", e);
+            }
+        }
         Main.currentDownloadingThread = null;
         Main.cancelOnProgressBar();
         Main.LOG.debug(Language.get("message.info.canceled"));
