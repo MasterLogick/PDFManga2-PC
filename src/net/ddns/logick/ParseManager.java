@@ -143,7 +143,9 @@ class ParseManager {
     }
 
     static void cancel() {
-        Main.currentDownloadingThread.interrupt();
+        if (Main.currentDownloadingThread != null)
+            Main.currentDownloadingThread.interrupt();
+        Main.currentDownloadingThread = null;
         Main.cancelOnProgressBar();
         Main.LOG.debug(Language.get("message.info.canceled"));
         System.gc();
