@@ -8,6 +8,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,6 +67,15 @@ public class ReadMangaParser implements Parser {
             return null;
         }
         Elements refs = tableHoverElement.select("a");
+        if (mainPage.baseUri().contains("mintmanga.live")) {
+            List<String> list = Util.reverseList(refs.eachAttr("href"));
+            ArrayList<String> ret = new ArrayList<>();
+            for (String s :
+                    list) {
+                ret.add(s + "?mtr=1");
+            }
+            return ret;
+        }
         return Util.reverseList(refs.eachAttr("href"));
     }
 
@@ -83,8 +93,11 @@ public class ReadMangaParser implements Parser {
     @Override
     public List<String> getChapterImagesLocations(Document chapterPage) {
         String html = chapterPage.toString();
+        System.out.println(html);
         String sub = html.substring(html.indexOf("rm_h.init( [['','") + "rm_h.init( [['','".length());
+        System.out.println(sub);
         sub = sub.substring(0, sub.indexOf("]], 0, false);"));
+        System.out.println(sub);
         sub = sub.substring(0, sub.lastIndexOf("\""));
         String[] uris = sub.split("\",[0-9]+,[0-9]+],\\['','");
         for (int i = 0; i < uris.length; i++) {
